@@ -15,6 +15,11 @@ public final class UrlMapping {
     public static final String USERS_BASE = API_BASE_V1 + "/users";
     public static final String USER_ID_VARIABLE = "/{userId}";
 
+    // --- Appointment Resource Paths ---
+    public static final String APPOINTMENTS_BASE = API_BASE_V1 + "/appointments";
+    public static final String APPOINTMENT_ID_VARIABLE = "/{appointmentId}";
+    public static final String APPOINTMENT_NUMBER_VARIABLE = "/appointment-number/{appointmentNumber}";
+
     private UrlMapping() {
         // Private constructor to prevent instantiation
     }

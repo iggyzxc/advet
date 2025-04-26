@@ -3,7 +3,7 @@ package com.macadev.advet.factory;
 import com.macadev.advet.dto.request.UserRegistrationRequest;
 import com.macadev.advet.model.Admin;
 import com.macadev.advet.model.User;
-import com.macadev.advet.model.UserType;
+import com.macadev.advet.enums.UserType;
 import com.macadev.advet.repository.AdminRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;

@@ -1,4 +1,4 @@
-package com.macadev.advet.model;
+package com.macadev.advet.enums;
 
 public enum UserType {
     ADMIN,

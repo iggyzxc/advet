@@ -1,7 +1,12 @@
 package com.macadev.advet.model;
 
+import com.macadev.advet.enums.UserType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -32,14 +37,19 @@ public class User {
     @Column(nullable = false, unique = true, length = 100)
     private String email;
 
-    @Column(nullable = false) // Password hash stored here, should not be null
+    @Column(nullable = false) // Password hash stored here should not be null
     private String password;
 
-    @Enumerated(EnumType.STRING) // Store enum name ("ADMIN", "VET", "PATIENT") in the database column
+    @Enumerated(EnumType.STRING) // Store enum name ("ADMIN", "VET", "PATIENT") as a String in the database
     @Column(nullable = false)
     private UserType userType;
 
     @Column(nullable = false)
-    private boolean isEnabled = true; // Default new users to disabled
+    private boolean isEnabled = true; // Default new users to enabled state
 
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @Transient
+    List<Appointment> appointments;
 }

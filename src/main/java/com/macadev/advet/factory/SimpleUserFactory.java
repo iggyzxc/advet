@@ -2,7 +2,8 @@ package com.macadev.advet.factory;
 
 import com.macadev.advet.dto.request.UserRegistrationRequest;
 
-import com.macadev.advet.exception.UserException;
+import com.macadev.advet.exception.InvalidInputException;
+import com.macadev.advet.exception.ResourceAlreadyExistsException;
 import com.macadev.advet.model.User;
 import com.macadev.advet.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,9 +22,7 @@ public class SimpleUserFactory implements UserFactory {
     public User createUser(UserRegistrationRequest request) {
 
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new UserException.EmailAlreadyExistsException(
-                    String.format("User with email %s already exists", request.getEmail())
-            );
+            throw new ResourceAlreadyExistsException("User", "email", request.getEmail());
         }
 
         switch (request.getUserType()) {
@@ -36,9 +35,7 @@ public class SimpleUserFactory implements UserFactory {
             case PATIENT -> {
                 return patientFactory.createPatient(request);
             }
-            default -> throw new UserException.InvalidUserException(
-                    "Invalid user type provided:" + request.getUserType()
-            );
+            default -> throw new InvalidInputException("Invalid user type: " + request.getUserType());
         }
     }
 }
