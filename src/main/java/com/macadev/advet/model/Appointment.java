@@ -22,7 +22,7 @@ import java.util.Random;
 @NoArgsConstructor
 @Entity
 @Table(name = "appointments")
-@JsonIgnoreProperties({"patient", "veterinarian"})
+//@JsonIgnoreProperties({"patient", "veterinarian"})
 public class Appointment {
 
     @Id
