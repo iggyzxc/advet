@@ -1,6 +1,6 @@
 package com.macadev.advet.factory;
 
-import com.macadev.advet.dto.request.UserRegistrationRequest;
+import com.macadev.advet.dto.request.user.UserRegistrationRequestDto;
 
 import com.macadev.advet.exception.InvalidInputException;
 import com.macadev.advet.exception.ResourceAlreadyExistsException;
@@ -19,7 +19,7 @@ public class SimpleUserFactory implements UserFactory {
     private final PatientFactory patientFactory;
 
     @Override
-    public User createUser(UserRegistrationRequest request) {
+    public User createUser(UserRegistrationRequestDto request) {
 
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new ResourceAlreadyExistsException("User", "email", request.getEmail());

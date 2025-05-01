@@ -1,6 +1,6 @@
 package com.macadev.advet.factory;
 
-import com.macadev.advet.dto.request.UserRegistrationRequest;
+import com.macadev.advet.dto.request.user.UserRegistrationRequestDto;
 import com.macadev.advet.model.User;
 import com.macadev.advet.enums.UserType;
 import com.macadev.advet.model.Veterinarian;
@@ -18,7 +18,7 @@ public class VeterinarianFactory {
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
 
-    public User createVeterinarian(UserRegistrationRequest request) {
+    public User createVeterinarian(UserRegistrationRequestDto request) {
         Veterinarian veterinarian = new Veterinarian();
         modelMapper.map(request, veterinarian);
         veterinarian.setSpecialization(request.getSpecialization());

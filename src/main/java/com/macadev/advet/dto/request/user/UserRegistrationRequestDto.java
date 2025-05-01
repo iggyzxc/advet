@@ -1,10 +1,10 @@
-package com.macadev.advet.dto.request;
+package com.macadev.advet.dto.request.user;
 
 import com.macadev.advet.enums.UserType;
 import lombok.Data;
 
 @Data
-public class UserRegistrationRequest {
+public class UserRegistrationRequestDto {
 
     private Long id;
     private String firstName;

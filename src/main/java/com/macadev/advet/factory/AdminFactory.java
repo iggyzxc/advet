@@ -1,6 +1,6 @@
 package com.macadev.advet.factory;
 
-import com.macadev.advet.dto.request.UserRegistrationRequest;
+import com.macadev.advet.dto.request.user.UserRegistrationRequestDto;
 import com.macadev.advet.model.Admin;
 import com.macadev.advet.model.User;
 import com.macadev.advet.enums.UserType;
@@ -18,7 +18,7 @@ public class AdminFactory {
     private final PasswordEncoder passwordEncoder;
     public final ModelMapper modelMapper;
 
-    public User createAdmin(UserRegistrationRequest request) {
+    public User createAdmin(UserRegistrationRequestDto request) {
         Admin admin = new Admin();
         modelMapper.map(request, admin);
         admin.setPassword(passwordEncoder.encode(admin.getPassword()));

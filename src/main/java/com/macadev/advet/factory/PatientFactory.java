@@ -1,6 +1,6 @@
 package com.macadev.advet.factory;
 
-import com.macadev.advet.dto.request.UserRegistrationRequest;
+import com.macadev.advet.dto.request.user.UserRegistrationRequestDto;
 import com.macadev.advet.model.Patient;
 import com.macadev.advet.model.User;
 import com.macadev.advet.enums.UserType;
@@ -18,7 +18,7 @@ public class PatientFactory {
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
 
-    public User createPatient(UserRegistrationRequest request) {
+    public User createPatient(UserRegistrationRequestDto request) {
         Patient patient = new Patient();
         modelMapper.map(request, patient);
         // Encode password before save

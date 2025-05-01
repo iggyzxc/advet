@@ -1,7 +1,6 @@
 package com.macadev.advet.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.macadev.advet.enums.AppointmentStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -14,6 +13,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 @Getter
@@ -45,27 +45,24 @@ public class Appointment {
     @Enumerated(EnumType.STRING)
     private AppointmentStatus status;
 
-   @JoinColumn(name = "patient_id")
+    @JoinColumn(name = "patient_id")
     @ManyToOne(fetch = FetchType.LAZY) // Lazy loading for performance since we only want to load the user when needed
     private User patient;
 
-   @JoinColumn(name = "veterinarian_id")
+    @JoinColumn(name = "veterinarian_id")
     @ManyToOne(fetch = FetchType.LAZY)
     private User veterinarian;
 
-   public void addPatient(User patient) {
+
+    @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL)
+    List<Pet> pets = new ArrayList<>();
+
+    public void addPatient(User patient) {
         this.setPatient(patient);
-        if (patient.getAppointments() == null) {
-            patient.setAppointments(new ArrayList<>());
-        }
-        patient.getAppointments().add(this);
     }
 
     public void addVeterinarian(User veterinarian) {
         this.setVeterinarian(veterinarian);
-        if (veterinarian.getAppointments() == null) {
-            veterinarian.setAppointments(new ArrayList<>());
-        }
     }
 
     public void setAppointmentNumber() {

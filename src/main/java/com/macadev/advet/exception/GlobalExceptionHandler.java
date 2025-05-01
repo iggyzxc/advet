@@ -1,6 +1,8 @@
 package com.macadev.advet.exception;
 
 import com.macadev.advet.util.FeedbackMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -11,6 +13,8 @@ import java.time.LocalDateTime;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     // Handles specific user not found exceptions
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -56,9 +60,14 @@ public class GlobalExceptionHandler {
     // Handles all other exceptions
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorMessage> handleException(Exception exception, WebRequest webRequest) {
+        logger.error("Unhandled exception occurred processing request: [{}]: {}",
+                webRequest.getDescription(false),
+                exception.getMessage(),
+                exception) // Log the full exception object to get the stack trace in logs
+        ;
         ErrorMessage errorMessage = new ErrorMessage(
                 LocalDateTime.now(),
-                FeedbackMessage.INTERNAL_SERVER_ERROR,
+                FeedbackMessage.INTERNAL_SERVER_ERROR, // Generic message to client
                 webRequest.getDescription(false),
                 "INTERNAL_SERVER_ERROR"
         );

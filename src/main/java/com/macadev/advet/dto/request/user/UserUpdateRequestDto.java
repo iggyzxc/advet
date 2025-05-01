@@ -1,9 +1,9 @@
-package com.macadev.advet.dto.request;
+package com.macadev.advet.dto.request.user;
 
 import lombok.Data;
 
 @Data
-public class UserUpdateRequest {
+public class UserUpdateRequestDto {
 
     private String firstName;
     private String lastName;

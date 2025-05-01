@@ -1,16 +1,12 @@
-package com.macadev.advet.dto.request;
+package com.macadev.advet.dto.request.appointment;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class AppointmentUpdateRequest {
+public class AppointmentUpdateRequestDto {
     private LocalDate appointmentDate;
     private LocalTime appointmentTime;
     private String reason;

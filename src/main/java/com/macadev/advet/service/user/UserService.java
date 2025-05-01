@@ -1,7 +1,7 @@
 package com.macadev.advet.service.user;
 
-import com.macadev.advet.dto.request.UserRegistrationRequest;
-import com.macadev.advet.dto.request.UserUpdateRequest;
+import com.macadev.advet.dto.request.user.UserRegistrationRequestDto;
+import com.macadev.advet.dto.request.user.UserUpdateRequestDto;
 import com.macadev.advet.dto.response.user.UserDto;
 import com.macadev.advet.dto.response.user.VeterinarianDto;
 import com.macadev.advet.exception.InvalidInputException;
@@ -12,7 +12,7 @@ import com.macadev.advet.model.Patient;
 import com.macadev.advet.model.User;
 import com.macadev.advet.model.Veterinarian;
 import com.macadev.advet.repository.UserRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -28,7 +28,7 @@ public class UserService implements IUserService{
 
     @Override
     @Transactional
-    public UserDto registerUser(UserRegistrationRequest request) {
+    public UserDto createUser(UserRegistrationRequestDto request) {
         // Calls factory to create and save a specific user type (Admin, Patient, Vet)
         // Saves the user to the DB and returns the created user
         User user = userFactory.createUser(request);
@@ -37,7 +37,27 @@ public class UserService implements IUserService{
 
     @Override
     @Transactional
-    public UserDto updateUser(Long userId, UserUpdateRequest request) {
+    public List<UserDto> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        return users.stream()
+                .map(this::mapUserToSpecificDto)
+                // Replaced '.collect(Collectors.toList())' with '.toList();'
+                // which collects into an unmodifiable List
+                // The list contains actual instances of PatientDto, VeterinarianDto and/or AdminDto
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public UserDto getUserById(Long userId) {
+        User user =  userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", userId));
+        return mapUserToSpecificDto(user);
+    }
+
+    @Override
+    @Transactional
+    public UserDto updateUser(Long userId, UserUpdateRequestDto request) {
         User existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId));
         modelMapper.map(request, existingUser);
@@ -62,31 +82,11 @@ public class UserService implements IUserService{
 
     @Override
     @Transactional
-    public UserDto getUserById(Long userId) {
-        User user =  userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", userId));
-        return mapUserToSpecificDto(user);
-    }
-
-    @Override
-    @Transactional
     public void deleteUserById(Long userId) {
         userRepository.findById(userId)
                 .ifPresentOrElse(userRepository::delete,
                         () -> {throw new ResourceNotFoundException("User", userId);
         });
-    }
-
-    @Override
-    @Transactional
-    public List<UserDto> getAllUsers() {
-        List<User> users = userRepository.findAll();
-        return users.stream()
-                .map(this::mapUserToSpecificDto)
-                // Replaced '.collect(Collectors.toList())' with '.toList();'
-                // which collects into an unmodifiable List
-                // The list contains actual instances of PatientDto, VeterinarianDto and/or AdminDto
-                .toList();
     }
 
     // Helper method for mapping

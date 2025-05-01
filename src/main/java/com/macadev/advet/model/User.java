@@ -49,7 +49,4 @@ public class User {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
-
-    @Transient
-    List<Appointment> appointments;
 }

@@ -20,6 +20,11 @@ public final class UrlMapping {
     public static final String APPOINTMENT_ID_VARIABLE = "/{appointmentId}";
     public static final String APPOINTMENT_NUMBER_VARIABLE = "/appointment-number/{appointmentNumber}";
 
+
+    // --- Pet Resource Paths ---
+    public static final String PETS_BASE = API_BASE_V1 + "/pets";
+    public static final String PET_ID_VARIABLE = "/{petId}";
+
     private UrlMapping() {
         // Private constructor to prevent instantiation
     }

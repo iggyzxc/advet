@@ -12,10 +12,4 @@ public class ResourceNotFoundException extends AppException {
         this.resourceType = resourceType;
         this.identifier = identifier;
     }
-
-    public ResourceNotFoundException(String message) {
-        super(message);
-        this.resourceType = "Resource"; // Default value
-        this.identifier = "N/A";
-    }
 }

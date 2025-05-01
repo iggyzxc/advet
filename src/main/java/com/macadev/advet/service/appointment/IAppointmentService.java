@@ -1,17 +1,17 @@
 package com.macadev.advet.service.appointment;
 
-import com.macadev.advet.dto.request.AppointmentUpdateRequest;
+import com.macadev.advet.dto.request.appointment.AppointmentRequestDto;
+import com.macadev.advet.dto.request.appointment.AppointmentUpdateRequestDto;
 import com.macadev.advet.dto.response.AppointmentDto;
-import com.macadev.advet.model.Appointment;
 
 import java.util.List;
 
 public interface IAppointmentService {
 
-    AppointmentDto createAppointment(Long patientId, Long veterinarianId, Appointment appointment);
-    AppointmentDto updateAppointment(Long id, AppointmentUpdateRequest request);
+    AppointmentDto createAppointment(AppointmentRequestDto request);
     List<AppointmentDto> getAllAppointments();
-    AppointmentDto getAppointmentById(Long id);
+    AppointmentDto getAppointmentById(Long appointmentId);
     AppointmentDto getByAppointmentNumber(String appointmentNumber);
-    void deleteAppointmentById(Long id);
+    AppointmentDto updateAppointment(Long appointmentId, AppointmentUpdateRequestDto request);
+    void deleteAppointmentById(Long appointmentId);
 }

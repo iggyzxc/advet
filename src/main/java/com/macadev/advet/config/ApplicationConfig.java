@@ -1,13 +1,11 @@
 package com.macadev.advet.config;
 
+import com.macadev.advet.dto.response.PetDto;
 import com.macadev.advet.dto.response.user.AdminDto;
 import com.macadev.advet.dto.response.user.PatientDto;
 import com.macadev.advet.dto.response.user.UserDto;
 import com.macadev.advet.dto.response.user.VeterinarianDto;
-import com.macadev.advet.model.Admin;
-import com.macadev.advet.model.Patient;
-import com.macadev.advet.model.User;
-import com.macadev.advet.model.Veterinarian;
+import com.macadev.advet.model.*;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.context.annotation.Bean;
@@ -23,14 +21,14 @@ public class ApplicationConfig {
         // Create a standard ModelMapper instance
         ModelMapper modelMapper = new ModelMapper();
 
-        // Access its configuration settings
+        // Configure Global Settings
         modelMapper.getConfiguration()
-                // Enable skipping null values during mapping
-                .setSkipNullEnabled(true) // Add this line
+                // Enable skipping null values during mapping (good for updates)
+                .setSkipNullEnabled(true)
                 // Set the strategy for matching source/destination fields
-                .setMatchingStrategy(MatchingStrategies.STRICT); // Example: Use strict matching
+                .setMatchingStrategy(MatchingStrategies.STRICT); // Use strict matching
 
-        // Define type mappings for inheritance
+        // Define explicit type mappings for User inheritance
         // Define the base mapping for common fields
         modelMapper.createTypeMap(User.class, UserDto.class);
 
@@ -42,12 +40,28 @@ public class ApplicationConfig {
                 .includeBase(User.class, UserDto.class);
 
         modelMapper.createTypeMap(Admin.class, AdminDto.class)
-                .includeBase(User.class, UserDto.class); // Inherit User -> UserDto mapping
+                .includeBase(User.class, UserDto.class);
+
+//        // Define Mapping for Pet to PetDto
+//        modelMapper.createTypeMap(Pet.class, PetDto.class)
+//                .addMappings(mapper ->  // Use curly braces for multi-statement lambda body
+//                    // Define the mapping for ownerFullName
+//                    // Condition: Only map if the source Pet's owner is not null
+//                    mapper.when(ctx -> {
+//                                // Use Pattern Matching for instanceof (Java 16+)
+//                                Object source = ctx.getSource();
+//                                // Check if the source is Pet AND declare 'pet' variable, then check if the owner is not null
+//                                return source instanceof Pet pet && pet.getOwner() != null;
+//                            })
+//                        .map(src -> src.getOwner().getFirstName() + " " + src.getOwner().getLastName(),
+//                                PetDto::setOwnerFullName) // Destination setter method reference
+//                            );
         return modelMapper;
     }
 
     @Bean // Define the password encoder bean
     public PasswordEncoder passwordEncoder() {
+
         return new BCryptPasswordEncoder();
     }
 }
