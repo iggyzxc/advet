@@ -4,7 +4,7 @@ public enum ResourceType {
     USER("User"),
     APPOINTMENT("Appointment"),
     PET("Pet"),
-    PHOTO("Photo"),
+    IMAGE("Image"),
     REVIEW("Review");
 
     private final String displayName;

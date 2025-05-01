@@ -18,8 +18,11 @@ public class Image {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String fileType;
+    private String contentType;
 
     @Lob
-    private Blob image;
+    private Blob imageData;
+
+    @OneToOne(mappedBy = "image") // mappedBy points to the 'image' field in User
+    private User user;
 }

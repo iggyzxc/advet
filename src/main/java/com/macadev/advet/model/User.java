@@ -47,12 +47,14 @@ public class User {
     private boolean isEnabled = true; // Default new users to enabled state
 
     @CreationTimestamp
+    @Column(nullable = false, updatable = false) // Creation timestamp shouldn't be updatable
     private LocalDateTime createdAt;
 
     @OneToOne(
             cascade = CascadeType.ALL, // When the user is deleted, also delete the photo
-            fetch = FetchType.EAGER, // When fetching a user, also fetch the photo
+            fetch = FetchType.LAZY, // When fetching a user, also fetch the photo
             orphanRemoval = true // Any image in the DB that is not referenced by a user removed
     )
+    @JoinColumn(name = "image_id", referencedColumnName = "id")  // ADDED: Explicit FK column in 'users' table
     private Image image;
 }
