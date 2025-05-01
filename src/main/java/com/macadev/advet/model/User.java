@@ -6,7 +6,6 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @Setter
@@ -49,4 +48,11 @@ public class User {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    @OneToOne(
+            cascade = CascadeType.ALL, // When the user is deleted, also delete the photo
+            fetch = FetchType.EAGER, // When fetching a user, also fetch the photo
+            orphanRemoval = true // Any image in the DB that is not referenced by a user removed
+    )
+    private Image image;
 }

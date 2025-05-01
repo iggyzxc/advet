@@ -67,7 +67,7 @@ public class GlobalExceptionHandler {
         ;
         ErrorMessage errorMessage = new ErrorMessage(
                 LocalDateTime.now(),
-                FeedbackMessage.INTERNAL_SERVER_ERROR, // Generic message to client
+                FeedbackMessage.INTERNAL_SERVER_ERROR, // Generic message to the client
                 webRequest.getDescription(false),
                 "INTERNAL_SERVER_ERROR"
         );
