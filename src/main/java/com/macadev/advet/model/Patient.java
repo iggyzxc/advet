@@ -27,4 +27,10 @@ public class Patient extends User{
             cascade = CascadeType.ALL, // Deleting a patient deletes their appointments. Use carefully!
             fetch = FetchType.LAZY) // Always use LAZY for collections
     private List<Appointment> appointments = new ArrayList<>(); // Initialize the list
+
+    @OneToMany(
+            mappedBy = "patient", // MUST match the 'patient' field name in the Review class
+            cascade = CascadeType.ALL, // Deleting a patient deletes their reviews. Use carefully!
+            fetch = FetchType.LAZY) // Always use LAZY for collections)
+    private List<Review> reviews = new ArrayList<>();
 }

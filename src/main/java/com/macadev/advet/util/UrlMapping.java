@@ -29,6 +29,10 @@ public final class UrlMapping {
     public static final String IMAGES_BASE = API_BASE_V1 + "/images";
     public static final String IMAGE_ID_VARIABLE = "/{imageId}";
 
+    // --- Review Resource Paths ---
+    public static final String REVIEWS_BASE = API_BASE_V1 + "/reviews";
+    public static final String REVIEW_ID_VARIABLE = "/{reviewId}";
+
     private UrlMapping() {
         // Private constructor to prevent instantiation
     }
