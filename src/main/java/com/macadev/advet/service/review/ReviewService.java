@@ -18,21 +18,25 @@ import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ReviewService implements IReviewService {
+
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
     private final AppointmentRepository appointmentRepository;
     private final ModelMapper modelMapper;
     private static final Logger log = LoggerFactory.getLogger(ReviewService.class);
+
 
     @Override
     @Transactional
@@ -78,7 +82,20 @@ public class ReviewService implements IReviewService {
         log.info("Review saved with ID: {}", savedReview.getId());
 
         // Return DTO
-        return modelMapper.map(savedReview, ReviewDto.class);
+        ReviewDto reviewDto = modelMapper.map(savedReview, ReviewDto.class);
+
+        User savedPatient = savedReview.getPatient();
+        User savedVeterinarian = savedReview.getVeterinarian();
+
+        if (savedPatient != null) {
+            savedPatient.getId();
+            reviewDto.setPatient_id(savedPatient.getId());
+        }
+        if (savedVeterinarian != null) {
+            savedVeterinarian.getId();
+            reviewDto.setVeterinarian_id(savedVeterinarian.getId());
+        }
+        return reviewDto;
     }
 
     @Override
@@ -86,9 +103,15 @@ public class ReviewService implements IReviewService {
     public Page<ReviewDto> getAllReviewsByUserId(Long userId, int page, int size) {
         log.debug("Fetching reviews for user ID {} - Page: {}, Size: {}", userId, page, size);
         PageRequest pageRequest = PageRequest.of(page, size);
+        Page<Review> reviewPage = reviewRepository.findAllByUserId(userId, pageRequest);
 
-        return reviewRepository.findAllByUserId(userId, pageRequest)
-                .map(review -> modelMapper.map(review, ReviewDto.class));
+        // Map the content from Review entities to ReviewDto using the helper method
+        List<ReviewDto> dtoList = reviewPage.getContent().stream()
+                .map(this::mapReviewToDtoWithDetails) // Helper method reference
+                .collect(Collectors.toList());
+
+        // Create a new Page object with the DTO list and original pagination info
+        return new PageImpl<>(dtoList, reviewPage.getPageable(), reviewPage.getTotalElements());
     }
 
     @Override
@@ -116,15 +139,29 @@ public class ReviewService implements IReviewService {
                     return new ResourceNotFoundException(FeedbackMessage.noResourceFound(ResourceType.REVIEW), reviewId);
                 });
 
-        // Todo: Check if the review belongs to the user
-
+        // Todo: Check if the review belongs to the user for authorization
 
         modelMapper.map(request, existingReview);
         log.debug("Applied updates from DTO to Review entity with ID: {}", reviewId);
-        Review savedReview = reviewRepository.save(existingReview);
 
-        // Map saved entity to response DTO
-        return modelMapper.map(savedReview, ReviewDto.class);
+        Review savedReview = reviewRepository.save(existingReview);
+        log.info("Successfully updated review with ID: {}", reviewId);
+
+        ReviewDto reviewDto = modelMapper.map(savedReview, ReviewDto.class);
+
+        User savedPatient = savedReview.getPatient();
+        User savedVet = savedReview.getVeterinarian();
+
+        if (savedPatient != null) {
+            savedPatient.getId(); // Trigger lazy load
+            reviewDto.setPatient_id(savedPatient.getId());
+
+        }
+        if (savedVet != null) {
+            savedVet.getId(); // Trigger lazy load
+            reviewDto.setVeterinarian_id(savedVet.getId());
+        }
+        return reviewDto;
     }
 
     @Override
@@ -143,5 +180,26 @@ public class ReviewService implements IReviewService {
                             throw new ResourceNotFoundException(FeedbackMessage.noResourceFound(ResourceType.REVIEW), reviewId);
                         }
                 );
+    }
+
+    // --- Private Helper Method for Hybrid Mapping ---
+    private ReviewDto mapReviewToDtoWithDetails(Review review) {
+        // 1. Map basic fields using ModelMapper
+        ReviewDto reviewDto = modelMapper.map(review, ReviewDto.class);
+
+        // 2. Manually set IDs (and potentially names) from relationships
+        User patient = review.getPatient();
+        User veterinarian = review.getVeterinarian();
+
+        if (patient != null) {
+            patient.getId(); // Trigger lazy load if needed
+            reviewDto.setPatient_id(patient.getId());
+        }
+        if (veterinarian != null) {
+            veterinarian.getId(); // Trigger lazy load if needed
+            reviewDto.setVeterinarian_id(veterinarian.getId());
+        }
+
+        return reviewDto;
     }
 }
