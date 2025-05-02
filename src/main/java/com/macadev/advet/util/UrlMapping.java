@@ -25,6 +25,10 @@ public final class UrlMapping {
     public static final String PETS_BASE = API_BASE_V1 + "/pets";
     public static final String PET_ID_VARIABLE = "/{petId}";
 
+    // --- Image Resource Paths ---
+    public static final String IMAGES_BASE = API_BASE_V1 + "/images";
+    public static final String IMAGE_ID_VARIABLE = "/{imageId}";
+
     private UrlMapping() {
         // Private constructor to prevent instantiation
     }

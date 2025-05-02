@@ -1,34 +1,42 @@
 package com.macadev.advet.service.image;
 
+import com.macadev.advet.dto.response.ImageDto;
 import com.macadev.advet.exception.AppException;
+import com.macadev.advet.exception.InvalidInputException;
 import com.macadev.advet.exception.ResourceNotFoundException;
 import com.macadev.advet.model.Image;
 import com.macadev.advet.model.User;
 import com.macadev.advet.repository.ImageRepository;
 import com.macadev.advet.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.sql.rowset.serial.SerialBlob;
 import java.io.IOException;
 import java.sql.Blob;
 import java.sql.SQLException;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class ImageService implements IImageService {
+
     private final ImageRepository imageRepository;
     private final UserRepository userRepository;
+    private final ModelMapper modelMapper;
     private static final Logger log = LoggerFactory.getLogger(ImageService.class);
+
 
     @Override
     @Transactional
-    public Image saveImage(MultipartFile file, Long userId) throws IOException {
+    public ImageDto saveImage(MultipartFile file, Long userId) throws IOException {
         log.debug("Attempting to save image for user ID: {}", userId);
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("File cannot be null or empty.");
@@ -41,20 +49,24 @@ public class ImageService implements IImageService {
                     return new ResourceNotFoundException("User", userId);
                 });
 
-        // Create or Update image entity
-        Image image = user.getImage();
-        if (image == null) {
-            image = new Image();
-        } else {
-            log.debug("Updating existing image (ID: {}) for user ID: {}", image.getId(), userId);
+        if (user.getImage() != null) {
+            log.warn("User {} already has an image (ID: {}). Use updateImage to replace.", userId, user.getImage().getId());
+            throw new InvalidInputException("User already has a profile image. Use the update operation instead.");
         }
+
+        Image image = new Image();
+        log.debug("Creating new image entity for user ID: {}", userId);
+
         image.setContentType(file.getContentType());
+        // Clean and set filename
+        String fileName = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
+        image.setFileName(fileName);
 
         // --- Handling Blob data ---
         try {
             // Create a Blob object from the file's bytes
             Blob imageBlob = new SerialBlob(file.getBytes());
-            image.setImageData(imageBlob); // Assuming field name is 'imageData' of type Blob
+            image.setImageData(imageBlob);
         } catch (SQLException | IOException e) { // Catch potential exceptions
             log.error("Error processing image data for user {}: {}", userId, e.getMessage(), e);
             // Wrap checked exceptions in a runtime exception
@@ -63,22 +75,39 @@ public class ImageService implements IImageService {
 
         // Save the Image entity FIRST
         Image savedImage = imageRepository.save(image);
+        log.info("Successfully saved new image with ID: {} for user ID: {}", savedImage.getId(), userId);
 
-        // 4. Associate image with user and save user (if User owns the relationship)
-        if (!savedImage.equals(user.getImage())) { // Avoid unnecessary save
-            user.setImage(savedImage);
-            userRepository.save(user);
-            log.debug("Updated user {} with new image ID {}", userId, savedImage.getId());
+        // 4. Associate image with user then save user
+        user.setImage(savedImage);
+        User savedUser = userRepository.save(user);
+        log.debug("Updated user {} with new image ID {}", userId, savedImage.getId());
+
+        ImageDto imageDto = modelMapper.map(savedImage, ImageDto.class);
+
+        // Double check if timestamp is populated now
+        if (imageDto.getUploadedAt() == null && savedUser.getCreatedAt() != null) {
+            log.warn("Timestamp was set on entity ({}) but null in DTO after mapping!", savedImage.getUploadedAt());
+            // Manually set if needed (indicates mapping issue)
+            imageDto.setUploadedAt(savedUser.getCreatedAt());
+        } else if (imageDto.getUploadedAt() == null) {
+            log.warn("Timestamp still null after save and mapping for image ID {}", savedImage.getId());
         }
 
-        // Return the saved image
-        return savedImage;
+        // Return the DTO
+        return imageDto;
     }
 
     @Override
     @Transactional(readOnly = true) // Read-only transaction
-    public Optional<Image> getImageById(Long imageId) {
-        return imageRepository.findById(imageId);
+    public ImageDto getImageById(Long imageId) {
+        log.debug("Attempting to get image by ID: {}", imageId);
+        Image image = imageRepository.findById(imageId).orElseThrow(
+                () -> {
+                    log.warn("Image not found for ID: {}", imageId);
+                    return new ResourceNotFoundException("Image", imageId);
+                }
+        );
+        return modelMapper.map(image, ImageDto.class);
     }
 
     @Override
@@ -92,6 +121,7 @@ public class ImageService implements IImageService {
                     log.warn("Image not found when fetching data for ID: {}", imageId);
                     return new ResourceNotFoundException("Image", imageId);
                         });
+
         // Extract byte data from Blob, handling potential SQLException
         try {
             Blob imageBlob = image.getImageData();
@@ -124,30 +154,47 @@ public class ImageService implements IImageService {
 
     @Override
     @Transactional
-    public Image updateImage(Long imageId, byte[] imageData) {
-        log.debug("Attempting to update image with ID: {}", imageId);
+    public ImageDto updateImage(Long imageId, MultipartFile file) throws IOException { // Accept MultipartFile for update
+        log.debug("Attempting to update image with ID: {} using file: {}", imageId, file.getOriginalFilename());
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File cannot be null or empty for update.");
+        }
+
+        // Fetch the existing Image entity
         Image existingImage = imageRepository.findById(imageId)
                 .orElseThrow(() -> {
                     log.warn("Image not found for update with ID: {}", imageId);
                     return new ResourceNotFoundException("Image", imageId);
                 });
+
+        // Update metadata and data from the file
         try {
-            Blob imageBlob = new SerialBlob(imageData);
-            existingImage.setImageData(imageBlob);
-        } catch (SQLException e) {
-            log.error("SQL Error creating Blob for image update ID {}: {}", imageId, e.getMessage(), e);
-            throw new AppException("Could not update image data due to database error for ID: " + imageId, e);
+            // Clean filename (optional, but good practice)
+            String fileName = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
+            existingImage.setFileName(fileName); // Update filename if stored
+            existingImage.setContentType(file.getContentType()); // Update content type
+
+            // Convert file bytes to Blob
+            Blob imageBlob = new SerialBlob(file.getBytes());
+            existingImage.setImageData(imageBlob); // Set the Blob field
+
+        } catch (SQLException | IOException e) {
+            log.error("SQL/IO Error processing file for image update ID {}: {}", imageId, e.getMessage(), e);
+            throw new AppException("Could not update image data due to processing error for ID: " + imageId, e);
         }
+
+        // Save the updated entity
         Image updatedImage = imageRepository.save(existingImage);
         log.info("Successfully updated image with ID: {}", updatedImage.getId());
-        return updatedImage;
+
+        // Map to DTO before returning
+        return modelMapper.map(updatedImage, ImageDto.class);
     }
 
     @Override
     @Transactional
     public void deleteImage(Long imageId) {
         log.debug("Attempting to delete image with ID: {}", imageId);
-
         //Find first, then delete it if present
         imageRepository.findById(imageId)
                 .ifPresentOrElse(image -> {

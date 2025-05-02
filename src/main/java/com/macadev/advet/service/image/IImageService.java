@@ -1,16 +1,15 @@
 package com.macadev.advet.service.image;
 
-import com.macadev.advet.model.Image;
+import com.macadev.advet.dto.response.ImageDto;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Optional;
 
 public interface IImageService {
-    Image saveImage(MultipartFile file, Long userId) throws IOException, SQLException;
-    Optional<Image> getImageById(Long imageId);
+    ImageDto saveImage(MultipartFile file, Long userId) throws IOException;
+    ImageDto getImageById(Long imageId);
     byte[] getImageData(Long imageId);
-    Image updateImage(Long imageId, byte[] imageData);
+    ImageDto updateImage(Long imageId, MultipartFile file) throws IOException;
     void deleteImage(Long imageId);
 }
